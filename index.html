@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Support Ticket Triage &amp; Reply Assistant</title>
+<title>Efoli Support Assistant — Triage, Docs &amp; Human Handoff</title>
 <style>
   :root{
     --bg:#0f1420; --panel:#171d2b; --panel2:#1e2637; --line:#2a3346;
@@ -16,11 +16,11 @@
     background:linear-gradient(160deg,#0f1420,#131a29); color:var(--text); min-height:100vh;
   }
   header{padding:26px 20px 10px; text-align:center}
-  header h1{margin:0 0 4px; font-size:22px; letter-spacing:.2px}
+  header h1{margin:0 0 4px; font-size:21px; letter-spacing:.2px}
   header p{margin:0; color:var(--muted); font-size:14px}
-  .wrap{max-width:1040px; margin:0 auto; padding:18px 16px 60px; display:grid;
+  .wrap{max-width:1060px; margin:0 auto; padding:18px 16px 60px; display:grid;
     grid-template-columns:1fr 1fr; gap:16px}
-  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+  @media(max-width:840px){.wrap{grid-template-columns:1fr}}
   .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px}
   .card h2{margin:0 0 12px; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--muted)}
   textarea{
@@ -42,14 +42,19 @@
     cursor:pointer; border:1px solid transparent;
   }
   .samples span:hover{border-color:var(--blue); color:var(--text)}
-  .meta{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px}
+  .meta{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
   .pill{padding:6px 12px; border-radius:20px; font-size:13px; font-weight:600; border:1px solid var(--line)}
   .label{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px}
   .block{margin-bottom:16px}
+  .route{padding:12px 14px; border-radius:10px; margin-bottom:16px; font-weight:600; font-size:14px; border:1px solid; display:flex; align-items:center; gap:8px}
+  .route small{display:block; font-weight:400; color:var(--muted); margin-top:3px; font-size:12.5px}
+  .route-auto{background:rgba(55,201,138,.12); border-color:rgba(55,201,138,.4); color:var(--green)}
+  .route-human{background:rgba(245,179,66,.12); border-color:rgba(245,179,66,.4); color:var(--amber)}
   .reply{
     background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px;
-    white-space:pre-wrap; font-size:14px; line-height:1.55; min-height:90px;
+    white-space:pre-wrap; font-size:14px; line-height:1.55; min-height:80px;
   }
+  .note{background:#0c1120; border:1px dashed var(--line); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--muted); white-space:pre-wrap}
   pre{
     background:#0c1120; border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto;
     font-size:12.5px; color:#bfe3c9; margin:0;
@@ -57,19 +62,21 @@
   .empty{color:var(--muted); font-size:14px; padding:8px 0}
   .tag{display:inline-block; background:var(--chip); color:var(--muted); font-size:12px;
     padding:3px 9px; border-radius:8px; margin:0 6px 6px 0}
-  footer{text-align:center; color:var(--muted); font-size:12.5px; padding:10px 20px 40px}
+  .src{font-size:12.5px; color:var(--muted); margin-top:8px}
+  footer{text-align:center; color:var(--muted); font-size:12.5px; padding:10px 20px 40px; line-height:1.6}
   .copied{color:var(--green); font-size:12px; margin-left:8px; opacity:0; transition:.2s}
   .copied.show{opacity:1}
   .badge-P1{background:rgba(242,96,122,.15); color:var(--red); border-color:rgba(242,96,122,.4)}
   .badge-P2{background:rgba(245,179,66,.15); color:var(--amber); border-color:rgba(245,179,66,.4)}
   .badge-P3{background:rgba(55,201,138,.15); color:var(--green); border-color:rgba(55,201,138,.4)}
   .cat{background:rgba(76,141,255,.14); color:var(--blue); border-color:rgba(76,141,255,.4)}
+  .app{background:rgba(180,120,255,.15); color:#b892ff; border-color:rgba(180,120,255,.4)}
 </style>
 </head>
 <body>
 <header>
-  <h1>Support Ticket Triage &amp; Reply Assistant</h1>
-  <p>Paste a customer message — it categorizes, prioritizes, and drafts a reply for a human to review.</p>
+  <h1>Efoli Support Assistant — Triage, Docs &amp; Human Handoff</h1>
+  <p>Reads a customer message, answers from the help center when it can, and routes the rest to the right human.</p>
 </header>
 
 <div class="wrap">
@@ -78,21 +85,22 @@
     <h2>1 · Customer message</h2>
     <textarea id="input" placeholder="Paste the customer's email or chat message here..."></textarea>
     <div class="samples" id="samples">
-      <span data-k="billing">Billing issue</span>
-      <span data-k="integration">Integration / SSO</span>
-      <span data-k="bug">Bug report</span>
-      <span data-k="howto">How-to question</span>
-      <span data-k="angry">Urgent / upset</span>
+      <span data-k="install">Install PushBundle</span>
+      <span data-k="notshow">Bundle not showing</span>
+      <span data-k="discount">Discount not applying</span>
+      <span data-k="refund">Refund / billing</span>
+      <span data-k="human">Talk to a human</span>
+      <span data-k="ai">Are you human or AI?</span>
     </div>
     <div class="row">
-      <button id="analyze">Analyze ticket</button>
+      <button id="analyze">Analyze &amp; route</button>
       <button class="ghost" id="clear">Clear</button>
     </div>
   </section>
 
   <!-- OUTPUT -->
   <section class="card">
-    <h2>2 · Suggested triage</h2>
+    <h2>2 · Assistant decision</h2>
     <div id="result">
       <div class="empty">Results will appear here after you analyze a ticket.</div>
     </div>
@@ -100,149 +108,258 @@
 </div>
 
 <footer>
-  Human-in-the-loop by design — every suggestion is a draft a support engineer reviews and edits before sending.
+  Human-in-the-loop by design — the assistant only <em>suggests</em>. A support engineer reviews every reply, and anything
+  sensitive, technical, or unclear is routed to a human.<br>
+  Knowledge-base entries are representative samples of Efoli's Shopify apps (PushBundle · MultiVariants · DiscountRay · OrderRules · Embed App).
 </footer>
 
 <script>
-// ---- Sample tickets (for quick demo) ----
+// ---------- Sample messages ----------
 const SAMPLES = {
-  billing: "Hi, I was charged twice for my subscription this month. Can you please check my invoice and refund the extra charge? My account email is anna@company.com.",
-  integration: "We are trying to connect Bonusly with our Okta SSO but users get an error when logging in. The SCIM sync also does not seem to add new employees. Can you help us set this up?",
-  bug: "When I click 'Give Recognition', the points field shows 0 and the page freezes. It happens every time on Chrome. This started after the latest update. Steps: open feed, click give, select a teammate, page freezes.",
-  howto: "Hello, how do I change the company values that appear when giving a bonus? I could not find the setting in the admin panel.",
-  angry: "This is the third time I am writing! Our whole team cannot log in and payroll is tomorrow. This is urgent and completely unacceptable. Please fix it now."
+  install: "Hi, I just added PushBundle to my store. How do I install it and create my first bundle?",
+  notshow: "I created a bundle in PushBundle but it is not showing on my product page. What am I doing wrong?",
+  discount: "My DiscountRay discount is not applying at checkout even though it is active. Can you help?",
+  refund: "I was charged twice for the app this month. I'd like a refund for the extra charge, my store is mystore.myshopify.com.",
+  human: "Can I please talk to a real person about this?",
+  ai: "Are you human or AI?"
 };
 
-// ---- Keyword rules: category ----
-const CATEGORY_RULES = [
-  { cat:"Billing & Payments", kw:["charged","invoice","refund","payment","billing","subscription","pricing","card"] },
-  { cat:"Integration & SSO",  kw:["okta","sso","scim","sftp","integration","api","webhook","sync","bamboohr","workday","adp","connect","slack","teams"] },
-  { cat:"Bug / Technical",    kw:["error","bug","freeze","crash","broken","not working","doesn't work","fails","500","blank","glitch"] },
-  { cat:"How-to / Guidance",  kw:["how do i","how to","where is","can i","setting","configure","set up","change","find"] },
-  { cat:"Account & Access",   kw:["login","log in","password","locked","access","cannot log","reset","permission"] }
+// ---------- Efoli apps (for detection) ----------
+const APPS = {
+  "PushBundle":   ["pushbundle","push bundle","bundle","bundles"],
+  "MultiVariants":["multivariants","multi variant","multi-variant","variants","bulk order","bulk add","variant grid"],
+  "DiscountRay":  ["discountray","discount ray","discount","discounts"],
+  "OrderRules":   ["orderrules","order rule","order rules","minimum order","order limit","restriction","block order"],
+  "Embed App":    ["embed app","embed","embedding","iframe"]
+};
+function detectApp(t){
+  for(const app in APPS){ if(APPS[app].some(k=>t.includes(k))) return app; }
+  return null;
+}
+
+// ---------- Knowledge base (sample help-center content) ----------
+const KB = [
+  {app:"PushBundle", title:"Getting started with PushBundle", src:"Help Center › PushBundle › Getting Started",
+   kw:["install pushbundle","set up","setup","get started","create bundle","first bundle","how do i use pushbundle","new bundle"],
+   answer:"To create your first bundle:\n1) Open PushBundle from your Shopify admin.\n2) Click “Create Bundle” and choose the type (fixed or mix-and-match).\n3) Add the products and set the bundle discount.\n4) Choose where the widget appears (product page, cart) and hit Publish.\nThe bundle then goes live on your storefront right away."},
+  {app:"PushBundle", title:"Bundle not showing on the storefront", src:"Help Center › PushBundle › Troubleshooting",
+   kw:["not showing","not appearing","not visible","widget not showing","doesn't show","cant see bundle","can't see the bundle","bundle missing"],
+   answer:"If a bundle isn’t showing:\n1) Confirm the bundle status is “Published”, not draft.\n2) Check the widget is enabled for that product’s template in Display settings.\n3) Make sure the app embed is ON in Shopify › Theme › Customize › App embeds.\n4) Clear the theme cache and refresh.\nIf it still doesn’t appear, it may be a theme conflict worth a closer look."},
+  {app:"MultiVariants", title:"Setting up MultiVariants", src:"Help Center › MultiVariants › Getting Started",
+   kw:["multivariants","multi variant","variant grid","bulk order","bulk add","add multiple","quantity box","set up variants"],
+   answer:"To enable the multi-variant grid:\n1) Open MultiVariants and select the product or collection.\n2) Choose the layout (grid or list) and which variant options to show.\n3) Enable quantity boxes so customers can add several variants at once.\n4) Save and preview on the product page."},
+  {app:"MultiVariants", title:"Variant grid not displaying", src:"Help Center › MultiVariants › Troubleshooting",
+   kw:["grid not showing","variants not showing","not displaying","table not showing","grid missing"],
+   answer:"If the variant grid isn’t displaying:\n1) Confirm the product is included in the app’s active settings.\n2) Check the App embed is enabled in Theme › Customize › App embeds.\n3) Verify the product actually has multiple variants.\n4) Try incognito to rule out cache.\nIf it persists, a theme/template mismatch is the usual cause."},
+  {app:"DiscountRay", title:"Creating a discount with DiscountRay", src:"Help Center › DiscountRay › Getting Started",
+   kw:["create discount","set up discount","new discount","discount setup","volume discount","quantity break"],
+   answer:"To create a discount:\n1) Open DiscountRay and click “Create Discount”.\n2) Pick the type (percentage, fixed, or volume/quantity break).\n3) Set the products/collections and conditions.\n4) Set the schedule and Publish.\nThe discount then applies automatically based on your rules."},
+  {app:"DiscountRay", title:"Discount not applying at checkout", src:"Help Center › DiscountRay › Troubleshooting",
+   kw:["discount not applying","not applying","code not working","discount not working","not applied at checkout"],
+   answer:"If a discount isn’t applying:\n1) Confirm it’s Active and within its scheduled dates.\n2) Check the cart meets the conditions (min quantity/amount, eligible products).\n3) Make sure it isn’t conflicting with another automatic discount — Shopify often allows only one automatic discount at a time.\n4) Test in incognito.\nConflicting automatic discounts are the most common cause."},
+  {app:"OrderRules", title:"Setting up an order rule", src:"Help Center › OrderRules › Getting Started",
+   kw:["order rule","create rule","set up rule","restriction","block order","minimum order","order limit","validation"],
+   answer:"To create an order rule:\n1) Open OrderRules and click “Create Rule”.\n2) Choose the condition (min order amount, quantity limits, blocked products, or shipping/zip restrictions).\n3) Set the action and the message customers see.\n4) Enable the rule.\nIt then validates the cart/checkout against your condition."},
+  {app:"OrderRules", title:"Rule not blocking / not triggering", src:"Help Center › OrderRules › Troubleshooting",
+   kw:["rule not working","not blocking","not triggering","rule not applying","validation not working"],
+   answer:"If a rule isn’t triggering:\n1) Confirm the rule is Enabled.\n2) Double-check the condition values match the test cart exactly.\n3) Note that some checkout-level rules require checkout validation (behavior can differ between Plus and non-Plus stores).\n4) Test with a cart that clearly meets the condition."},
+  {app:"Embed App", title:"Adding an embed with Embed App", src:"Help Center › Embed App › Getting Started",
+   kw:["embed app","embed code","iframe","add embed","embedding","insert embed"],
+   answer:"To add an embed:\n1) Open Embed App and create a new embed.\n2) Paste your embed/iframe code or pick a supported source.\n3) Configure size and placement.\n4) Add it to a page via the app block in Theme › Customize, or the provided snippet.\nSave and preview to confirm it renders."},
+  {app:null, title:"Pricing & plans", src:"Help Center › Billing › Plans",
+   kw:["price","pricing","plan","plans","cost","how much","monthly fee","subscription cost"],
+   answer:"Each Efoli app has its own plans, shown on the app’s pricing page in the Shopify App Store or in the app’s Plans section. Most apps offer a free tier or free trial so you can test before upgrading. If you tell me which app and your store size, I can point you to the right plan."},
+  {app:null, title:"Uninstalling / cancelling an app", src:"Help Center › Billing › Cancelling",
+   kw:["uninstall","remove app","delete app","cancel app","stop subscription"],
+   answer:"To uninstall: go to Shopify admin › Settings › Apps and sales channels, find the app, and click Uninstall. Uninstalling automatically cancels the subscription — Shopify handles billing. If you also want leftover theme code cleaned up, let us know the app and we’ll guide you."},
+  {app:null, title:"General install / getting started", src:"Help Center › Getting Started",
+   kw:["install","how to install","add app","get started","setup app"],
+   answer:"To install an Efoli app: open its listing in the Shopify App Store, click “Add app”, and approve the install. Then open the app from your Shopify admin to run the initial setup. Tell me which app you’re installing and I’ll share the exact next steps."}
 ];
 
-// ---- Keyword rules: priority ----
-const URGENT = ["urgent","asap","immediately","now","down","cannot log in","can't log in","whole team","everyone","payroll","deadline","tomorrow","unacceptable","critical","blocked","outage"];
-const HIGH   = ["error","bug","freeze","crash","charged twice","refund","not working","broken","fails"];
+function matchKB(t){
+  let best={article:null, score:0};
+  for(const a of KB){
+    let s=0; for(const k of a.kw){ if(t.includes(k)) s++; }
+    if(s>best.score) best={article:a, score:s};
+  }
+  return best;
+}
+
+// ---------- Category / priority / sentiment ----------
+const CATEGORY_RULES = [
+  { cat:"Billing & Payments", kw:["charged","invoice","refund","payment","billing","subscription","pricing","price","plan","cost"] },
+  { cat:"Integration & SSO",  kw:["okta","sso","scim","sftp","integration","api","webhook","sync","bamboohr","workday","adp"] },
+  { cat:"Bug / Technical",    kw:["error","bug","freeze","crash","broken","not working","doesn't work","fails","500","blank","glitch","not showing","not applying"] },
+  { cat:"How-to / Guidance",  kw:["how do i","how to","where is","can i","setting","configure","set up","install","change","create"] },
+  { cat:"Account & Access",   kw:["login","log in","password","locked","access","cannot log","reset","permission"] }
+];
+const URGENT = ["urgent","asap","immediately","right now","down","cannot log in","can't log in","whole team","everyone","payroll","deadline","today","unacceptable","critical","blocked","outage","losing sales","store is down"];
+const HIGH   = ["error","bug","freeze","crash","charged twice","refund","not working","broken","fails","not applying","not showing"];
 
 function analyze(text){
-  const t = text.toLowerCase();
+  const t=text.toLowerCase();
+  let best={cat:"General", score:0};
+  for(const r of CATEGORY_RULES){ let s=0; for(const k of r.kw){ if(t.includes(k)) s++; } if(s>best.score) best={cat:r.cat,score:s}; }
+  let priority="P3", reason="No urgent signals — standard queue.";
+  const u=URGENT.filter(k=>t.includes(k)), h=HIGH.filter(k=>t.includes(k));
+  if(u.length){ priority="P1"; reason="Urgent language detected: "+u.slice(0,3).join(", "); }
+  else if(h.length){ priority="P2"; reason="Technical / billing impact detected: "+h.slice(0,3).join(", "); }
+  const NEG=["angry","unacceptable","frustrated","third time","ridiculous","worst","terrible","furious","fed up"];
+  const neg=NEG.filter(k=>t.includes(k)).length || (text.match(/!/g)||[]).length>=2;
+  const sentiment=neg?"Frustrated":"Neutral";
+  const email=(text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)||[])[0]||null;
+  return { category:best.cat, priority, priorityReason:reason, sentiment, customerEmail:email,
+           wordCount:text.trim().split(/\s+/).filter(Boolean).length };
+}
 
-  // category: score each, pick best
-  let best = {cat:"General", score:0};
-  for(const rule of CATEGORY_RULES){
-    let s = 0;
-    for(const k of rule.kw){ if(t.includes(k)) s++; }
-    if(s > best.score) best = {cat:rule.cat, score:s};
+// ---------- Routing brain ----------
+const CLOSE = "\n\nBest regards,\nEfoli Support";
+
+function route(text, a){
+  const t=text.toLowerCase();
+  const app=detectApp(t);
+  const kb=matchKB(t);
+
+  const humanRequest = ["talk to a human","talk to a real","real person","speak to someone","speak to a person","talk to someone","human agent","representative","talk to a agent","talk to an agent","connect me to"].some(k=>t.includes(k));
+  const metaAI = ["human or ai","are you a bot","are you ai","is this a bot","talking to a robot","are you real","are you a human","bot or human"].some(k=>t.includes(k));
+  const wc=a.wordCount;
+  const greetingOnly = wc<=4 && /^(hi|hello|hey|good morning|good afternoon|good evening|assalam|salam)\b/.test(t) && !t.includes("?");
+  const thanksOnly = wc<=6 && /(thanks|thank you|thankyou|thx|shukriya|appreciate)/.test(t) && !/(but|however|still|not )/.test(t);
+  const billingDispute = ["refund","charged","double charge","overcharge","dispute","money back","wrong charge","charged twice","billed twice"].some(k=>t.includes(k));
+
+  // 1) explicit human request
+  if(humanRequest)
+    return human("General support","Customer explicitly asked to speak with a person.",app,kb,a,
+      "Of course — I’ll connect you with a support engineer right away. So they can help as fast as possible, could you share your store URL and a short description of what’s happening?");
+
+  // 2) meta: are you human or AI  (auto, honest)
+  if(metaAI)
+    return auto(app,null,0,
+      "Great question! You’re chatting with Efoli Support. We use AI tools to respond faster and pull up the right help articles, but a real support engineer reviews every conversation and handles anything that needs a human touch. How can I help you today?",
+      "Meta question — answered honestly, no ticket needed.");
+
+  // 3) greeting only
+  if(greetingOnly)
+    return auto(app,null,0,
+      "Hi there, and thanks for reaching out to Efoli Support! How can I help today? If you let me know which app you’re using (PushBundle, MultiVariants, DiscountRay, OrderRules, or Embed App) and what’s happening, I’ll get you sorted quickly.",
+      "Greeting — friendly opener, waiting for details.");
+
+  // 4) thanks only
+  if(thanksOnly)
+    return auto(app,null,0,
+      "You’re very welcome! I’m glad I could help. If anything else comes up with your Efoli apps, just reach out anytime.",
+      "Positive/closing message — no action needed.");
+
+  // 5) frustrated → human (personal response)
+  if(a.sentiment==="Frustrated")
+    return human("Senior support","Customer sounds upset — a support engineer should respond personally.",app,kb,a,
+      "I’m really sorry for the trouble, and I completely understand the frustration. I’m making sure a support engineer looks at this personally and gets back to you quickly. Could you share your store URL so we can jump straight in?");
+
+  // 6) bug / technical → engineering
+  if(a.category==="Bug / Technical" && kb.score<2)
+    return human("Engineering / Tier-2","Looks like a technical issue that needs investigation.",app,kb,a,
+      "Thanks for flagging this. It looks like something our technical team should check, so I’m escalating it now. Could you share your store URL, the app name, and a screenshot or short screen recording if possible? I’ll keep you updated.");
+
+  // 7) billing dispute / refund → billing
+  if(a.category==="Billing & Payments" && billingDispute)
+    return human("Billing team","Billing/refund matter — needs a human to review the account.",app,kb,a,
+      "Thanks for reaching out, and sorry for the trouble. I’ve passed this to our billing team and they’ll follow up shortly. To help them find your account fast, could you confirm your store URL and the email on your Shopify account?");
+
+  // 8) confident doc match → auto answer
+  if(kb.score>=2 || (kb.score>=1 && app)){
+    const art=kb.article;
+    const reply = "Thanks for reaching out, happy to help!\n\n"+art.answer+"\n\nYou can find the full steps in our help center ("+art.src+"). If anything is still unclear, just let me know and I’ll walk you through it.";
+    return auto(app||art.app, art, kb.score, reply, "Confident match in the help center — safe to auto-suggest.");
   }
-  const category = best.cat;
 
-  // priority
-  let priority = "P3", reason = "No urgent signals found — standard queue.";
-  const urgentHit = URGENT.filter(k=>t.includes(k));
-  const highHit = HIGH.filter(k=>t.includes(k));
-  if(urgentHit.length){ priority="P1"; reason="Urgent language detected: " + urgentHit.slice(0,3).join(", "); }
-  else if(highHit.length){ priority="P2"; reason="Technical / billing impact detected: " + highHit.slice(0,3).join(", "); }
-
-  // sentiment (very light)
-  const NEG = ["angry","unacceptable","frustrated","third time","ridiculous","worst","terrible","!!!"];
-  const negHit = NEG.filter(k=>t.includes(k)).length || (text.match(/!/g)||[]).length>=2;
-  const sentiment = negHit ? "Frustrated" : "Neutral";
-
-  // pull a rough email if present
-  const email = (text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)||[])[0] || null;
-
-  return { category, priority, priorityReason:reason, sentiment, customerEmail:email,
-           wordCount: text.trim().split(/\s+/).filter(Boolean).length };
+  // 9) fallback → human (general)
+  return human("General support","Not enough of a match in our docs — a support engineer should take a closer look.",app,kb,a,
+    "Thanks for reaching out! I want to make sure this gets the right help, so I’m connecting you with a support engineer. Could you tell me which app you’re using, share your store URL, and add a bit more detail about what you’re seeing?");
 }
 
-// ---- Draft reply templates by category ----
-function draftReply(a, rawText){
-  const t = (rawText||"").toLowerCase();
-  const isCancel = ["cancel","not going to use","not gonna use","anymore","stop using","no longer","don't want","do not want","won't use","wont use","leave the app","leaving"].some(k=>t.includes(k));
-  const isRefund = t.includes("refund") || t.includes("money back");
-
-  const openUpset = a.sentiment==="Frustrated"
-    ? "Thank you for reaching out, and I'm really sorry for the trouble this has caused — I understand how urgent this is, and I'll help you right away.\n\n"
-    : "Thanks for reaching out, and happy to help with this.\n\n";
-
-  const byCat = {
-    "Billing & Payments":
-      (isRefund && isCancel)
-        ? "I'm sorry to hear you're thinking of leaving, and I'll help you with the refund. Let me review your account and check which refund options apply to your plan. Could you confirm the email on your account so I can look into it? And if something about the app made you want to stop using it, I'd genuinely like to hear it — sometimes it's something I can help fix."
-      : isRefund
-        ? "I'm sorry for the trouble with this. I'll look into your account and the charge in question right away and check the refund options available to you. To help me sort it out quickly, could you confirm the email on your account and the approximate date of the charge?"
-        : "I'll pull up your account and review the charge you mentioned. Could you confirm the email on your account and the date of the charge so I can match it exactly and check what's happening?",
-    "Integration & SSO":
-      "For the SSO/SCIM setup, let's check a few things: (1) that the correct metadata/URLs are configured on both sides, (2) that the user is assigned to the app in your identity provider, and (3) the exact error text you see. If you can share a screenshot of the error, I'll pinpoint where the connection is breaking.",
-    "Bug / Technical":
-      "Thanks for the clear steps — that helps a lot. I'll try to reproduce this on my side now. Could you confirm your browser version and whether it happens in an incognito window too? If it's a confirmed bug, I'll log it with our engineering team with your steps attached and keep you updated until it's fixed.",
-    "How-to / Guidance":
-      "You can do this from the admin panel. I'll send you the exact steps below, and I'm also happy to hop on a quick call to walk through it together if that's easier.",
-    "Account & Access":
-      "Let's get you back in. I'll check your account access on my side. In the meantime, could you try a password reset and confirm the exact message you see when logging in? If multiple users are affected, let me know so I can prioritize it.",
-    "General":
-      "I'd like to make sure I fully understand the issue so I can solve it properly. Could you share a little more detail and, if possible, a screenshot? I'll take it from there."
-  };
-
-  const close = "\n\nI'll keep an eye on this and follow up shortly.\n\nBest regards,\nSupport Team";
-  return openUpset + (byCat[a.category]||byCat["General"]) + close;
+function auto(app, article, score, reply, reason){
+  return { mode:"auto", app, article, confidence: score>=2?"High":score===1?"Medium":"—",
+           reason, reply: reply+CLOSE };
+}
+function human(team, reason, app, kb, a, holding){
+  const conf = kb.score>=2?"High":kb.score===1?"Medium":"Low";
+  const note = "Route to: "+team+"\nApp: "+(app||"—")+" · Category: "+a.category+" · Priority: "+a.priority+" · Sentiment: "+a.sentiment
+             + (kb.article? "\nClosest article: "+kb.article.title+" ("+conf+" confidence)":"")
+             + "\nReason: "+reason;
+  return { mode:"human", team, app, article:kb.article, confidence:conf, reason, note, reply: holding+CLOSE };
 }
 
-// ---- Render ----
+// ---------- Render ----------
 function render(text){
-  const a = analyze(text);
-  const reply = draftReply(a, text);
-  const json = { category:a.category, priority:a.priority, sentiment:a.sentiment,
-                 customerEmail:a.customerEmail, wordCount:a.wordCount, suggestedReply:"(drafted)" };
+  const a=analyze(text);
+  const r=route(text,a);
 
-  const el = document.getElementById("result");
-  el.innerHTML = `
-    <div class="meta">
-      <span class="pill cat">${a.category}</span>
-      <span class="pill badge-${a.priority}">${a.priority} priority</span>
-      <span class="pill">${a.sentiment}</span>
-    </div>
+  const json={ app:r.app||null, category:a.category, priority:a.priority, sentiment:a.sentiment,
+    routing:r.mode==="auto"?"auto_answer":"human_handoff",
+    team:r.mode==="human"?r.team:null,
+    matchedArticle:r.article?r.article.title:null,
+    confidence:r.confidence, customerEmail:a.customerEmail, wordCount:a.wordCount };
+
+  const pills =
+    (r.app?`<span class="pill app">${r.app}</span>`:"") +
+    `<span class="pill cat">${a.category}</span>`+
+    `<span class="pill badge-${a.priority}">${a.priority} priority</span>`+
+    `<span class="pill">${a.sentiment}</span>`;
+
+  const routeBanner = r.mode==="auto"
+    ? `<div class="route route-auto">✓ Auto-answer from docs<small>${r.reason}</small></div>`
+    : `<div class="route route-human">→ Escalate to human · ${r.team}<small>${r.reason}</small></div>`;
+
+  const replyLabel = r.mode==="auto"
+    ? `Suggested answer (from Help Center)`
+    : `Holding reply to customer`;
+
+  const sourceLine = (r.mode==="auto" && r.article)
+    ? `<div class="src">Source: ${r.article.src} · Confidence: ${r.confidence}</div>` : "";
+
+  const handoff = r.mode==="human"
+    ? `<div class="block"><div class="label">Handoff note (internal)</div><div class="note">${r.note.replace(/</g,"&lt;")}</div></div>` : "";
+
+  document.getElementById("result").innerHTML = `
+    <div class="meta">${pills}</div>
+    ${routeBanner}
     <div class="block">
       <div class="label">Why this priority</div>
       <div style="font-size:13px;color:var(--muted)">${a.priorityReason}</div>
     </div>
+    ${handoff}
     <div class="block">
-      <div class="label">Detected details</div>
-      <span class="tag">Email: ${a.customerEmail||"none found"}</span>
-      <span class="tag">Length: ${a.wordCount} words</span>
-    </div>
-    <div class="block">
-      <div class="label">Suggested reply <span style="text-transform:none">(edit before sending)</span>
+      <div class="label">${replyLabel} <span style="text-transform:none">(edit before sending)</span>
         <button class="ghost" id="copyBtn" style="padding:4px 10px;font-size:12px;margin-left:6px">Copy</button>
         <span class="copied" id="copied">Copied</span>
       </div>
-      <div class="reply" id="replyBox" contenteditable="true">${reply.replace(/</g,"&lt;")}</div>
+      <div class="reply" id="replyBox" contenteditable="true">${r.reply.replace(/</g,"&lt;")}</div>
+      ${sourceLine}
     </div>
     <div class="block">
       <div class="label">Structured output (JSON)</div>
       <pre>${JSON.stringify(json,null,2)}</pre>
     </div>
   `;
-  document.getElementById("copyBtn").onclick = ()=>{
+  document.getElementById("copyBtn").onclick=()=>{
     navigator.clipboard.writeText(document.getElementById("replyBox").innerText);
     const c=document.getElementById("copied"); c.classList.add("show"); setTimeout(()=>c.classList.remove("show"),1200);
   };
 }
 
-// ---- Wire up ----
-document.getElementById("analyze").onclick = ()=>{
-  const v = document.getElementById("input").value.trim();
+// ---------- Wire up ----------
+document.getElementById("analyze").onclick=()=>{
+  const v=document.getElementById("input").value.trim();
   if(!v){ document.getElementById("result").innerHTML='<div class="empty">Please paste a customer message first.</div>'; return; }
   render(v);
 };
-document.getElementById("clear").onclick = ()=>{
+document.getElementById("clear").onclick=()=>{
   document.getElementById("input").value="";
   document.getElementById("result").innerHTML='<div class="empty">Results will appear here after you analyze a ticket.</div>';
 };
 document.querySelectorAll("#samples span").forEach(s=>{
-  s.onclick = ()=>{ document.getElementById("input").value = SAMPLES[s.dataset.k]; render(SAMPLES[s.dataset.k]); };
+  s.onclick=()=>{ document.getElementById("input").value=SAMPLES[s.dataset.k]; render(SAMPLES[s.dataset.k]); };
 });
 </script>
 </body>
