@@ -3,364 +3,338 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Efoli Support Assistant — Triage, Docs &amp; Human Handoff</title>
+<title>eFoli Support Assistant — AI chat with human handoff</title>
 <style>
   :root{
     --bg:#0f1420; --panel:#171d2b; --panel2:#1e2637; --line:#2a3346;
     --text:#e7ecf5; --muted:#9aa7bd; --blue:#4c8dff; --blue-d:#2f6fe0;
-    --green:#37c98a; --amber:#f5b342; --red:#f2607a; --chip:#243049;
+    --green:#37c98a; --amber:#f5b342; --red:#f2607a; --chip:#243049; --purple:#b892ff;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    background:linear-gradient(160deg,#0f1420,#131a29); color:var(--text); min-height:100vh;
-  }
-  header{padding:26px 20px 10px; text-align:center}
-  header h1{margin:0 0 4px; font-size:21px; letter-spacing:.2px}
-  header p{margin:0; color:var(--muted); font-size:14px}
-  .wrap{max-width:1060px; margin:0 auto; padding:18px 16px 60px; display:grid;
-    grid-template-columns:1fr 1fr; gap:16px}
-  @media(max-width:840px){.wrap{grid-template-columns:1fr}}
-  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px}
-  .card h2{margin:0 0 12px; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--muted)}
-  textarea{
-    width:100%; min-height:150px; resize:vertical; background:var(--panel2); color:var(--text);
-    border:1px solid var(--line); border-radius:10px; padding:12px; font-size:14px; line-height:1.5;
-  }
-  textarea:focus{outline:none; border-color:var(--blue)}
-  .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
-  button{
-    background:var(--blue); color:#fff; border:0; border-radius:10px; padding:11px 16px;
-    font-size:14px; font-weight:600; cursor:pointer; transition:.15s;
-  }
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:linear-gradient(160deg,#0f1420,#131a29); color:var(--text); min-height:100vh;}
+  header{padding:22px 20px 6px; text-align:center}
+  header h1{margin:0 0 4px; font-size:20px}
+  header p{margin:0; color:var(--muted); font-size:13.5px}
+  .wrap{max-width:1080px; margin:0 auto; padding:16px 16px 50px; display:grid;
+    grid-template-columns:1.15fr .85fr; gap:16px}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; flex-direction:column}
+  .card h2{margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted)}
+  /* chat */
+  .chat{height:440px; overflow-y:auto; padding:6px 4px; display:flex; flex-direction:column; gap:10px}
+  .msg{max-width:86%; padding:10px 13px; border-radius:14px; font-size:14px; line-height:1.5; white-space:pre-wrap}
+  .bot{align-self:flex-start; background:var(--panel2); border:1px solid var(--line); border-top-left-radius:4px}
+  .cust{align-self:flex-end; background:var(--blue); color:#fff; border-top-right-radius:4px}
+  .who{font-size:11px; color:var(--muted); margin:0 4px 2px}
+  .who.r{text-align:right}
+  .quick{display:flex; gap:7px; flex-wrap:wrap; margin-top:10px}
+  .quick span{font-size:12px; background:var(--chip); color:var(--muted); padding:6px 10px; border-radius:20px; cursor:pointer; border:1px solid transparent}
+  .quick span:hover{border-color:var(--blue); color:var(--text)}
+  .inrow{display:flex; gap:8px; margin-top:10px}
+  .inrow input{flex:1; background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:11px 12px; font-size:14px}
+  .inrow input:focus{outline:none; border-color:var(--blue)}
+  button{background:var(--blue); color:#fff; border:0; border-radius:10px; padding:11px 15px; font-size:14px; font-weight:600; cursor:pointer}
   button:hover{background:var(--blue-d)}
-  button.ghost{background:transparent; border:1px solid var(--line); color:var(--muted)}
+  button.ghost{background:transparent; border:1px solid var(--line); color:var(--muted); padding:6px 12px; font-size:12px}
   button.ghost:hover{border-color:var(--blue); color:var(--text)}
-  .samples{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
-  .samples span{
-    font-size:12px; background:var(--chip); color:var(--muted); padding:6px 10px; border-radius:20px;
-    cursor:pointer; border:1px solid transparent;
-  }
-  .samples span:hover{border-color:var(--blue); color:var(--text)}
-  .meta{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
-  .pill{padding:6px 12px; border-radius:20px; font-size:13px; font-weight:600; border:1px solid var(--line)}
-  .label{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px}
-  .block{margin-bottom:16px}
-  .route{padding:12px 14px; border-radius:10px; margin-bottom:16px; font-weight:600; font-size:14px; border:1px solid; display:flex; align-items:center; gap:8px}
-  .route small{display:block; font-weight:400; color:var(--muted); margin-top:3px; font-size:12.5px}
+  /* reasoning */
+  .meta{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px}
+  .pill{padding:5px 11px; border-radius:20px; font-size:12.5px; font-weight:600; border:1px solid var(--line)}
+  .label{color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px}
+  .block{margin-bottom:14px}
+  .route{padding:11px 13px; border-radius:10px; margin-bottom:14px; font-weight:600; font-size:13.5px; border:1px solid}
+  .route small{display:block; font-weight:400; color:var(--muted); margin-top:3px; font-size:12px}
   .route-auto{background:rgba(55,201,138,.12); border-color:rgba(55,201,138,.4); color:var(--green)}
   .route-human{background:rgba(245,179,66,.12); border-color:rgba(245,179,66,.4); color:var(--amber)}
-  .reply{
-    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px;
-    white-space:pre-wrap; font-size:14px; line-height:1.55; min-height:80px;
-  }
-  .note{background:#0c1120; border:1px dashed var(--line); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--muted); white-space:pre-wrap}
-  pre{
-    background:#0c1120; border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto;
-    font-size:12.5px; color:#bfe3c9; margin:0;
-  }
-  .empty{color:var(--muted); font-size:14px; padding:8px 0}
-  .tag{display:inline-block; background:var(--chip); color:var(--muted); font-size:12px;
-    padding:3px 9px; border-radius:8px; margin:0 6px 6px 0}
-  .src{font-size:12.5px; color:var(--muted); margin-top:8px}
-  footer{text-align:center; color:var(--muted); font-size:12.5px; padding:10px 20px 40px; line-height:1.6}
-  .copied{color:var(--green); font-size:12px; margin-left:8px; opacity:0; transition:.2s}
-  .copied.show{opacity:1}
+  .route-ask{background:rgba(76,141,255,.12); border-color:rgba(76,141,255,.4); color:var(--blue)}
+  pre{background:#0c1120; border:1px solid var(--line); border-radius:10px; padding:11px; overflow:auto; font-size:12px; color:#bfe3c9; margin:0}
+  .src{font-size:12px; color:var(--muted); margin-top:6px}
+  .empty{color:var(--muted); font-size:13.5px; padding:6px 0}
+  .cat{background:rgba(76,141,255,.14); color:var(--blue); border-color:rgba(76,141,255,.4)}
+  .app{background:rgba(180,120,255,.15); color:var(--purple); border-color:rgba(180,120,255,.4)}
   .badge-P1{background:rgba(242,96,122,.15); color:var(--red); border-color:rgba(242,96,122,.4)}
   .badge-P2{background:rgba(245,179,66,.15); color:var(--amber); border-color:rgba(245,179,66,.4)}
   .badge-P3{background:rgba(55,201,138,.15); color:var(--green); border-color:rgba(55,201,138,.4)}
-  .cat{background:rgba(76,141,255,.14); color:var(--blue); border-color:rgba(76,141,255,.4)}
-  .app{background:rgba(180,120,255,.15); color:#b892ff; border-color:rgba(180,120,255,.4)}
+  footer{text-align:center; color:var(--muted); font-size:12px; padding:6px 20px 36px; line-height:1.6}
 </style>
 </head>
 <body>
 <header>
-  <h1>Efoli Support Assistant — Triage, Docs &amp; Human Handoff</h1>
-  <p>Reads a customer message, answers from the help center when it can, and routes the rest to the right human.</p>
+  <h1>eFoli Support Assistant</h1>
+  <p>An AI chat that answers from eFoli's real help docs, asks follow-ups, and hands off to a human when it should.</p>
 </header>
 
 <div class="wrap">
-  <!-- INPUT -->
+  <!-- CHAT -->
   <section class="card">
-    <h2>1 · Customer message</h2>
-    <textarea id="input" placeholder="Paste the customer's email or chat message here..."></textarea>
-    <div class="samples" id="samples">
-      <span data-k="install">Install PushBundle</span>
-      <span data-k="notshow">Bundle not showing</span>
-      <span data-k="discount">Discount not applying</span>
-      <span data-k="refund">Refund / billing</span>
-      <span data-k="human">Talk to a human</span>
-      <span data-k="ai">Are you human or AI?</span>
+    <h2>Live chat <button class="ghost" id="reset" style="margin-left:8px">Reset</button></h2>
+    <div class="chat" id="chat"></div>
+    <div class="quick" id="quick">
+      <span>How do I install DiscountRay?</span>
+      <span>My discount is not applying at checkout</span>
+      <span>My PushBundle bundle is not showing</span>
+      <span>How do I change the widget colour?</span>
+      <span>I want a refund, charged twice</span>
+      <span>Can I talk to a human?</span>
     </div>
-    <div class="row">
-      <button id="analyze">Analyze &amp; route</button>
-      <button class="ghost" id="clear">Clear</button>
+    <div class="inrow">
+      <input id="input" placeholder="Type a customer message..." autocomplete="off" />
+      <button id="send">Send</button>
     </div>
   </section>
 
-  <!-- OUTPUT -->
+  <!-- REASONING -->
   <section class="card">
-    <h2>2 · Assistant decision</h2>
-    <div id="result">
-      <div class="empty">Results will appear here after you analyze a ticket.</div>
-    </div>
+    <h2>Assistant reasoning (behind the scenes)</h2>
+    <div id="reason"><div class="empty">The assistant's decision for each message will show here.</div></div>
   </section>
 </div>
 
 <footer>
-  Human-in-the-loop by design — the assistant only <em>suggests</em>. A support engineer reviews every reply, and anything
-  sensitive, technical, or unclear is routed to a human.<br>
-  Knowledge-base entries are representative samples of Efoli's Shopify apps (PushBundle · MultiVariants · DiscountRay · OrderRules · Embed App).
+  Human-in-the-loop by design — the assistant only <em>suggests</em>. Billing, bugs, upset customers and anything unclear are routed to a human.<br>
+  Knowledge base built from eFoli's public docs: PushBundle · MultiVariants · DiscountRay · QuotWay · OrderRules.
 </footer>
 
 <script>
-// ---------- Sample messages ----------
-const SAMPLES = {
-  install: "Hi, I just added PushBundle to my store. How do I install it and create my first bundle?",
-  notshow: "I created a bundle in PushBundle but it is not showing on my product page. What am I doing wrong?",
-  discount: "My DiscountRay discount is not applying at checkout even though it is active. Can you help?",
-  refund: "I was charged twice for the app this month. I'd like a refund for the extra charge, my store is mystore.myshopify.com.",
-  human: "Can I please talk to a real person about this?",
-  ai: "Are you human or AI?"
-};
-
-// ---------- Efoli apps (for detection) ----------
-const APPS = {
-  "PushBundle":   ["pushbundle","push bundle","bundle","bundles"],
-  "MultiVariants":["multivariants","multi variant","multi-variant","variants","bulk order","bulk add","variant grid"],
-  "DiscountRay":  ["discountray","discount ray","discount","discounts"],
-  "OrderRules":   ["orderrules","order rule","order rules","minimum order","order limit","restriction","block order"],
-  "Embed App":    ["embed app","embed","embedding","iframe"]
-};
-function detectApp(t){
-  for(const app in APPS){ if(APPS[app].some(k=>t.includes(k))) return app; }
-  return null;
-}
-
-// ---------- Knowledge base (sample help-center content) ----------
+// ================= Knowledge base (from eFoli docs) =================
 const KB = [
-  {app:"PushBundle", title:"Getting started with PushBundle", src:"Help Center › PushBundle › Getting Started",
-   kw:["install pushbundle","set up","setup","get started","create bundle","first bundle","how do i use pushbundle","new bundle"],
-   answer:"To create your first bundle:\n1) Open PushBundle from your Shopify admin.\n2) Click “Create Bundle” and choose the type (fixed or mix-and-match).\n3) Add the products and set the bundle discount.\n4) Choose where the widget appears (product page, cart) and hit Publish.\nThe bundle then goes live on your storefront right away."},
-  {app:"PushBundle", title:"Bundle not showing on the storefront", src:"Help Center › PushBundle › Troubleshooting",
-   kw:["not showing","not appearing","not visible","widget not showing","doesn't show","cant see bundle","can't see the bundle","bundle missing"],
-   answer:"If a bundle isn’t showing:\n1) Confirm the bundle status is “Published”, not draft.\n2) Check the widget is enabled for that product’s template in Display settings.\n3) Make sure the app embed is ON in Shopify › Theme › Customize › App embeds.\n4) Clear the theme cache and refresh.\nIf it still doesn’t appear, it may be a theme conflict worth a closer look."},
-  {app:"MultiVariants", title:"Setting up MultiVariants", src:"Help Center › MultiVariants › Getting Started",
-   kw:["multivariants","multi variant","variant grid","bulk order","bulk add","add multiple","quantity box","set up variants"],
-   answer:"To enable the multi-variant grid:\n1) Open MultiVariants and select the product or collection.\n2) Choose the layout (grid or list) and which variant options to show.\n3) Enable quantity boxes so customers can add several variants at once.\n4) Save and preview on the product page."},
-  {app:"MultiVariants", title:"Variant grid not displaying", src:"Help Center › MultiVariants › Troubleshooting",
-   kw:["grid not showing","variants not showing","not displaying","table not showing","grid missing"],
-   answer:"If the variant grid isn’t displaying:\n1) Confirm the product is included in the app’s active settings.\n2) Check the App embed is enabled in Theme › Customize › App embeds.\n3) Verify the product actually has multiple variants.\n4) Try incognito to rule out cache.\nIf it persists, a theme/template mismatch is the usual cause."},
-  {app:"DiscountRay", title:"Creating a discount with DiscountRay", src:"Help Center › DiscountRay › Getting Started",
-   kw:["create discount","set up discount","new discount","discount setup","volume discount","quantity break"],
-   answer:"To create a discount:\n1) Open DiscountRay and click “Create Discount”.\n2) Pick the type (percentage, fixed, or volume/quantity break).\n3) Set the products/collections and conditions.\n4) Set the schedule and Publish.\nThe discount then applies automatically based on your rules."},
-  {app:"DiscountRay", title:"Discount not applying at checkout", src:"Help Center › DiscountRay › Troubleshooting",
-   kw:["discount not applying","not applying","code not working","discount not working","not applied at checkout"],
-   answer:"If a discount isn’t applying:\n1) Confirm it’s Active and within its scheduled dates.\n2) Check the cart meets the conditions (min quantity/amount, eligible products).\n3) Make sure it isn’t conflicting with another automatic discount — Shopify often allows only one automatic discount at a time.\n4) Test in incognito.\nConflicting automatic discounts are the most common cause."},
-  {app:"OrderRules", title:"Setting up an order rule", src:"Help Center › OrderRules › Getting Started",
-   kw:["order rule","create rule","set up rule","restriction","block order","minimum order","order limit","validation"],
-   answer:"To create an order rule:\n1) Open OrderRules and click “Create Rule”.\n2) Choose the condition (min order amount, quantity limits, blocked products, or shipping/zip restrictions).\n3) Set the action and the message customers see.\n4) Enable the rule.\nIt then validates the cart/checkout against your condition."},
-  {app:"OrderRules", title:"Rule not blocking / not triggering", src:"Help Center › OrderRules › Troubleshooting",
-   kw:["rule not working","not blocking","not triggering","rule not applying","validation not working"],
-   answer:"If a rule isn’t triggering:\n1) Confirm the rule is Enabled.\n2) Double-check the condition values match the test cart exactly.\n3) Note that some checkout-level rules require checkout validation (behavior can differ between Plus and non-Plus stores).\n4) Test with a cart that clearly meets the condition."},
-  {app:"Embed App", title:"Adding an embed with Embed App", src:"Help Center › Embed App › Getting Started",
-   kw:["embed app","embed code","iframe","add embed","embedding","insert embed"],
-   answer:"To add an embed:\n1) Open Embed App and create a new embed.\n2) Paste your embed/iframe code or pick a supported source.\n3) Configure size and placement.\n4) Add it to a page via the app block in Theme › Customize, or the provided snippet.\nSave and preview to confirm it renders."},
-  {app:null, title:"Pricing & plans", src:"Help Center › Billing › Plans",
-   kw:["price","pricing","plan","plans","cost","how much","monthly fee","subscription cost"],
-   answer:"Each Efoli app has its own plans, shown on the app’s pricing page in the Shopify App Store or in the app’s Plans section. Most apps offer a free tier or free trial so you can test before upgrading. If you tell me which app and your store size, I can point you to the right plan."},
-  {app:null, title:"Uninstalling / cancelling an app", src:"Help Center › Billing › Cancelling",
-   kw:["uninstall","remove app","delete app","cancel app","stop subscription"],
-   answer:"To uninstall: go to Shopify admin › Settings › Apps and sales channels, find the app, and click Uninstall. Uninstalling automatically cancels the subscription — Shopify handles billing. If you also want leftover theme code cleaned up, let us know the app and we’ll guide you."},
-  {app:null, title:"General install / getting started", src:"Help Center › Getting Started",
-   kw:["install","how to install","add app","get started","setup app"],
-   answer:"To install an Efoli app: open its listing in the Shopify App Store, click “Add app”, and approve the install. Then open the app from your Shopify admin to run the initial setup. Tell me which app you’re installing and I’ll share the exact next steps."}
+ // PushBundle
+ {app:"PushBundle", title:"Install PushBundle", src:"pushbundle.com/docs/installation", kw:["install pushbundle","set up pushbundle","get started","app block","installation","how do i install"],
+  a:"To get PushBundle running:\n1) Install PushBundle from the Shopify App Store.\n2) Add the PushBundle app block to your theme (Online Store → Themes → Customize → add the app block / turn on the app embed).\n3) Open the app and create a bundle, then Publish.\nIt then appears on your storefront."},
+ {app:"PushBundle", title:"Create a Mix & Match bundle", src:"pushbundle.com/docs/mix-and-match-multiple-product", kw:["mix and match","mix & match","build a box","custom pack","pick your own","number of variants"],
+  a:"PushBundle's Mix & Match lets shoppers pick their own variants within a fixed quantity (e.g. a box of 12). Create a Mix & Match bundle, set the “Number of Variants” and “Quantity per Variant” limits, and optionally add a bundle discount."},
+ {app:"PushBundle", title:"Volume & multi-pack discounts", src:"pushbundle.com/docs/how-to-apply-multi-pack-discounts", kw:["volume bundle","multi pack","multipack","quantity discount bundle","bundle discount"],
+  a:"You can set volume bundles and multi-pack discounts in PushBundle so customers get a better price as they buy more, which lifts your average order value."},
+ {app:"PushBundle", title:"Bundle not showing on the storefront", src:"pushbundle.com/docs", kw:["bundle not showing","not showing","not appearing","not visible","widget not showing"],
+  a:"If a bundle isn't showing:\n1) Confirm the bundle is Published (not draft).\n2) Make sure the PushBundle app block / embed is added and enabled in your theme.\n3) Check the product matches the bundle's setup.\nThemes without app-block support won't have a place to render the widget — tell me your theme and I'll check."},
+ // MultiVariants
+ {app:"MultiVariants", title:"Install MultiVariants", src:"multivariants.com/academy/installation", kw:["install multivariants","get started","app block","installation","add app block","set up multivariants"],
+  a:"MultiVariants auto-integrates with your theme on install — no manual coding.\n1) Install it from the Shopify App Store.\n2) Add the MultiVariants app block to your theme (Shopify requires app blocks now).\n3) Create a ruleset in the dashboard and apply it to your products."},
+ {app:"MultiVariants", title:"What MultiVariants does / bulk ordering", src:"multivariants.com/academy/dashboard", kw:["bulk order","multiple variants","order multiple","one click","what does multivariants"],
+  a:"MultiVariants lets customers order multiple variants and quantities of the same product in one click — ideal for bulk/B2B. In a ruleset you choose a display style (List, Select, Swatch, or Matrix/Grid) and apply it to specific products or by tag, type, or vendor."},
+ {app:"MultiVariants", title:"Product Options (custom fields)", src:"multivariants.com/academy/how-to-set-up-product-options", kw:["product option","custom field","text option","file upload","date option","checkbox","swatch option","personalization"],
+  a:"Product Options break Shopify's 3-option limit — you can add unlimited custom fields: text, dropdown, color/image/button swatch, checkbox, file upload, date & time, and number inputs, each with optional add-on pricing. Great for engravings, uploads, and made-to-order products."},
+ {app:"MultiVariants", title:"Quantity restrictions & MOQ", src:"multivariants.com/academy/set-minimum-maximum-order-quantity", kw:["moq","minimum order","maximum order","quantity limit","increment","min max","restriction","bundle quantity"],
+  a:"From a ruleset you can set minimum/maximum order quantity or value (per variant or across the total), MOQ, incremental quantities (e.g. 3, 6, 9), bundle-quantity dropdowns, and limits on how many variants a customer must pick."},
+ {app:"MultiVariants", title:"Variant grid / options not showing", src:"multivariants.com/academy/quick-view-fixing", kw:["grid not showing","variants not showing","not displaying","not showing","quick view"],
+  a:"If the options/grid aren't showing:\n1) Confirm the product is included in the ruleset's “applies to”.\n2) Make sure the MultiVariants app block is added and enabled in your theme.\n3) Check the product actually has multiple variants.\nIf it's inside a Quick View, that needs a small JS snippet added to the quick-view template — I can share it."},
+ {app:"MultiVariants", title:"Does MultiVariants do discounts?", src:"multivariants.com/academy/can-i-apply-volume-discounts-with-multivariants", kw:["discount with multivariants","volume discount multivariants","price with multivariants"],
+  a:"MultiVariants doesn't handle product pricing or discounts itself. For discounts, our DiscountRay app works alongside it, or you can use a cart-based discount app."},
+ {app:"MultiVariants", title:"Apply restrictions on the cart page too", src:"multivariants.com/academy/how-to-apply-the-restrictions-on-cart-page-too", kw:["cart restriction","restriction on cart","cart page limit"],
+  a:"To enforce min/max/bundle restrictions on the cart page as well, add the cart liquid update to your theme's main-cart-items.liquid (Online Store → Themes → Edit code). I can guide you through it for your theme."},
+ // DiscountRay
+ {app:"DiscountRay", title:"Install DiscountRay", src:"discountray.com/docs/installation", kw:["install discountray","get started","app block","installation","set up discountray","how do i install"],
+  a:"To set up DiscountRay:\n1) Install it from the Shopify App Store (14-day trial, 30-day money-back).\n2) Add the DiscountRay app block to your theme.\n3) Create your first discount from the dashboard.\nMost discount types then apply automatically."},
+ {app:"DiscountRay", title:"Discount types", src:"discountray.com/features", kw:["discount type","types of discount","tiered","quantity discount","milestone","personalized","b2b pricing"],
+  a:"DiscountRay has six discount types: quantity/tiered discounts, unique per-variant pricing, personalized discounts (by customer, tag, country, cart value or order history — great for B2B), bundle discounts, milestone offers, and discount codes. Five apply automatically; only codes need the shopper to type something."},
+ {app:"DiscountRay", title:"Discount not applying at checkout", src:"discountray.com/faq", kw:["discount not applying","not applying","not working at checkout","code not working","discount not working"],
+  a:"The most common cause: a personalized (customer-specific) discount needs the shopper to be signed in — it won't resolve at guest checkout. For guest cases, use a discount code instead. Also confirm the discount is active and within its scheduled dates, and remember a code and an automatic discount will compound, not just add up."},
+ {app:"DiscountRay", title:"Style the widget with custom CSS", src:"discountray.com/docs/how-to-apply-custom-css", kw:["custom css","css","style","color","colour","design","font","look","match theme","widget style"],
+  a:"You can style the discount widget with Custom CSS (DiscountRay → App Settings → How to Apply Custom CSS), and pick a Display Style. To match your theme's price styling, right-click the price on a product page → Inspect, copy its CSS class, and paste it into DiscountRay's settings. For heavier custom design, I can loop in a support engineer."},
+ {app:"DiscountRay", title:"Pricing & plans", src:"discountray.com/pricing", kw:["price","pricing","plan","cost","how much","free plan"],
+  a:"DiscountRay has a free Starter plan (unlimited automatic discounts, quantity + tiered pricing). Growth is $14/mo or $134.40/yr, and Pro is $29/mo or $278.40/yr — annual saves 20%. Paid plans include a 14-day trial and a 30-day money-back guarantee."},
+ {app:"DiscountRay", title:"Translate the widget text", src:"discountray.com/docs/add-more-language", kw:["translate","language","translation"],
+  a:"To translate the widget: DiscountRay dashboard → App Settings → pick your language from the top-right menu → enter your text → Save. The interface supports 8 languages."},
+ // QuotWay
+ {app:"QuotWay", title:"What QuotWay does / install", src:"quotway.com/docs/getting-started", kw:["quotway","what does quotway","install quotway","get started quote","b2b quote"],
+  a:"QuotWay is a B2B quote & negotiation app. Install it, add the “Request a Quote” button via theme app blocks (no code), configure your quote form, then negotiate with versioned proposals and convert accepted quotes into native Shopify draft orders."},
+ {app:"QuotWay", title:"Add the Request a Quote button", src:"quotway.com/docs/storefront/quote-button-placement", kw:["request a quote","quote button","add quote","quote form"],
+  a:"Add the Request a Quote button with QuotWay's theme app blocks on your product and cart pages — no theme code to edit. Make sure the app embed is turned on, then confirm it's live on the storefront."},
+ {app:"QuotWay", title:"Hide prices / show quote button", src:"quotway.com/docs/storefront/hide-prices", kw:["hide price","hide prices","request price","show quote instead"],
+  a:"QuotWay can hide prices and show a “Request a Quote” button instead, including a search-engine-safe option so the price is also hidden from search engines."},
+ {app:"QuotWay", title:"Negotiate & convert quotes", src:"quotway.com/docs/negotiation/proposals-and-versions", kw:["negotiate","counter offer","proposal","convert quote","draft order"],
+  a:"You build proposals with per-line buyer prices and a floor price, exchange counter-offers across versioned rounds, and convert accepted quotes (fully or partially) into native Shopify draft orders to invoice and get paid."},
+ // OrderRules
+ {app:"OrderRules", title:"What OrderRules does / install", src:"orderrules.com/docs/getting-started/installing-orderrules", kw:["orderrules","order rules","what does orderrules","install order","get started","order limit","purchase limit"],
+  a:"OrderRules controls what your store accepts: store hours & holidays, order limits (daily/weekly/monthly), per-customer limits, spending caps, MOQ, step quantities, product/collection/weight limits, and delivery-date scheduling. Install it and you can have a first rule live in about 5 minutes."},
+ {app:"OrderRules", title:"Works with Shop Pay / no Plus needed", src:"orderrules.com/docs", kw:["shop pay","apple pay","express checkout","shopify plus","plus","works with checkout","server side"],
+  a:"OrderRules rules are enforced server-side by a Shopify checkout validation Function, so they hold through Shop Pay, Apple Pay, Google Pay and direct checkout URLs — not just the cart page. You do NOT need Shopify Plus for order limits, store hours, or delivery enforcement."},
+ {app:"OrderRules", title:"Store hours & holiday calendar", src:"orderrules.com/docs/store-hours/daily-schedules", kw:["store hours","business hours","holiday","closed","blackout","open hours"],
+  a:"Set daily schedules, multiple open windows per day, and a holiday/blackout calendar, each with a custom “closed” message shown to customers at checkout."},
+ {app:"OrderRules", title:"Delivery date picker setup", src:"orderrules.com/docs/delivery/getting-started-delivery-dates", kw:["delivery date","date picker","time slot","pickup","delivery"],
+  a:"The delivery date picker (Advanced plan) needs the OrderRules theme app block added to your product and cart templates. Then set availability rules, time slots, per-date capacity, and blackout dates."},
+ {app:"OrderRules", title:"Rule not applying / not blocking", src:"orderrules.com/docs/troubleshooting/rules-not-applying", kw:["rule not applying","not blocking","not triggering","rule not working"],
+  a:"If a rule isn't applying:\n1) Confirm the rule is Enabled.\n2) Check the condition values match your test cart exactly.\n3) For delivery rules, make sure the theme app block is added.\nRules stack — when several apply, the first limit reached is the one that blocks the order."},
+ // Generic
+ {app:null, title:"Uninstall / cancel an app", src:"help center", kw:["uninstall","cancel","remove app","stop subscription","delete app"],
+  a:"To uninstall any eFoli app: Shopify admin → Settings → Apps and sales channels → find the app → Uninstall. That automatically cancels its subscription (Shopify handles the billing). If you'd like leftover theme code cleaned up, tell me the app and I'll guide you."}
 ];
 
-function matchKB(t){
-  let best={article:null, score:0};
-  for(const a of KB){
-    let s=0; for(const k of a.kw){ if(t.includes(k)) s++; }
-    if(s>best.score) best={article:a, score:s};
+// ================= App detection =================
+const APP_SYN = {
+ "PushBundle":  ["pushbundle","push bundle","mix and match","mix & match","build a box","bundle"],
+ "MultiVariants":["multivariants","multi variant","multi-variant","bulk order","variant grid","product option","swatch"],
+ "DiscountRay": ["discountray","discount ray","discount","tiered","b2b pricing"],
+ "QuotWay":     ["quotway","request a quote","quote","negotiat"],
+ "OrderRules":  ["orderrules","order rules","order limit","store hours","delivery date","purchase limit"]
+};
+function detectApp(t){ for(const app in APP_SYN){ if(APP_SYN[app].some(k=>t.includes(k))) return app; } return null; }
+
+function matchKB(t, app){
+  let best={a:null,score:0};
+  for(const item of KB){
+    let s=0; for(const k of item.kw){ if(t.includes(k)) s++; }
+    if(app && item.app===app && s>0) s+=1;          // small boost for the active app
+    if(s>best.score) best={a:item,score:s};
   }
   return best;
 }
 
-// ---------- Category / priority / sentiment ----------
-const CATEGORY_RULES = [
-  { cat:"Billing & Payments", kw:["charged","invoice","refund","payment","billing","subscription","pricing","price","plan","cost"] },
-  { cat:"Integration & SSO",  kw:["okta","sso","scim","sftp","integration","api","webhook","sync","bamboohr","workday","adp"] },
-  { cat:"Bug / Technical",    kw:["error","bug","freeze","crash","broken","not working","doesn't work","fails","500","blank","glitch","not showing","not applying"] },
-  { cat:"How-to / Guidance",  kw:["how do i","how to","where is","can i","setting","configure","set up","install","change","create"] },
-  { cat:"Account & Access",   kw:["login","log in","password","locked","access","cannot log","reset","permission"] }
-];
-const URGENT = ["urgent","asap","immediately","right now","down","cannot log in","can't log in","whole team","everyone","payroll","deadline","today","unacceptable","critical","blocked","outage","losing sales","store is down"];
-const HIGH   = ["error","bug","freeze","crash","charged twice","refund","not working","broken","fails","not applying","not showing"];
-
-function analyze(text){
-  const t=text.toLowerCase();
-  let best={cat:"General", score:0};
-  for(const r of CATEGORY_RULES){ let s=0; for(const k of r.kw){ if(t.includes(k)) s++; } if(s>best.score) best={cat:r.cat,score:s}; }
-  let priority="P3", reason="No urgent signals — standard queue.";
+// ================= Classify =================
+const URGENT=["urgent","asap","immediately","right now","store is down","losing sales","can't sell","cannot sell","launch today","deadline"];
+const HIGH=["not working","not applying","not showing","error","broken","charged twice","refund","bug","crash"];
+function classify(t){
+  let cat="General";
+  if(/(charged|refund|invoice|billing|price|pricing|plan|cost|subscription)/.test(t)) cat="Billing & Payments";
+  else if(/(error|bug|broken|crash|freeze|not working|not showing|not applying|not displaying)/.test(t)) cat="Bug / Technical";
+  else if(/(how do i|how to|set up|install|configure|create|where is|can i)/.test(t)) cat="How-to / Guidance";
+  else if(/(css|colour|color|style|design|font|layout|translate|language)/.test(t)) cat="Design / Customization";
+  let priority="P3", why="No urgent signals — standard queue.";
   const u=URGENT.filter(k=>t.includes(k)), h=HIGH.filter(k=>t.includes(k));
-  if(u.length){ priority="P1"; reason="Urgent language detected: "+u.slice(0,3).join(", "); }
-  else if(h.length){ priority="P2"; reason="Technical / billing impact detected: "+h.slice(0,3).join(", "); }
-  const NEG=["angry","unacceptable","frustrated","third time","ridiculous","worst","terrible","furious","fed up"];
-  const neg=NEG.filter(k=>t.includes(k)).length || (text.match(/!/g)||[]).length>=2;
-  const sentiment=neg?"Frustrated":"Neutral";
-  const email=(text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)||[])[0]||null;
-  return { category:best.cat, priority, priorityReason:reason, sentiment, customerEmail:email,
-           wordCount:text.trim().split(/\s+/).filter(Boolean).length };
+  if(u.length){priority="P1"; why="Urgent language: "+u.slice(0,2).join(", ");}
+  else if(h.length){priority="P2"; why="Impact detected: "+h.slice(0,2).join(", ");}
+  const neg=["angry","unacceptable","frustrated","third time","ridiculous","worst","fed up","furious"].some(k=>t.includes(k))||(t.match(/!/g)||[]).length>=2;
+  return {category:cat, priority, why, sentiment:neg?"Frustrated":"Neutral"};
 }
 
-// ---------- Routing brain ----------
-const CLOSE = "\n\nBest regards,\nEfoli Support";
+// ================= Conversation state =================
+let convo=[]; let lastApp=null; let stage="idle"; let lastArticle=null;
+const CLOSE="";
 
-function route(text, a){
+function pushMsg(who,text){ convo.push({who,text}); }
+
+function respond(text){
   const t=text.toLowerCase();
-  const app=detectApp(t);
-  const kb=matchKB(t);
+  const c=classify(t);
+  const app=detectApp(t)||lastApp;
+  if(detectApp(t)) lastApp=detectApp(t);
 
-  const humanRequest = ["talk to a human","talk to a real","real person","speak to someone","speak to a person","talk to someone","human agent","representative","talk to a agent","talk to an agent","connect me to"].some(k=>t.includes(k));
-  const metaAI = ["human or ai","are you a bot","are you ai","is this a bot","talking to a robot","are you real","are you a human","bot or human"].some(k=>t.includes(k));
-  const wc=a.wordCount;
-  const greetingOnly = wc<=4 && /^(hi|hello|hey|good morning|good afternoon|good evening|assalam|salam)\b/.test(t) && !t.includes("?");
-  const thanksOnly = wc<=6 && /(thanks|thank you|thankyou|thx|shukriya|appreciate)/.test(t) && !/(but|however|still|not )/.test(t);
-  const billingDispute = ["refund","charged","double charge","overcharge","dispute","money back","wrong charge","charged twice","billed twice"].some(k=>t.includes(k));
+  const humanReq=["talk to a human","real person","speak to someone","speak to a person","talk to someone","human agent","representative","talk to a agent","talk to an agent"].some(k=>t.includes(k));
+  const metaAI=["human or ai","are you a bot","are you ai","is this a bot","talking to a robot","are you real","bot or human","are you human"].some(k=>t.includes(k));
+  const greeting=/^(hi|hello|hey|good morning|good afternoon|good evening|assalam|salam)\b/.test(t)&&text.trim().split(/\s+/).length<=4&&!t.includes("?");
+  const positive=/(thanks|thank you|thankyou|thx|solved|it works|working now|got it|perfect|great, that)/.test(t);
+  const negative=/(still not|didn'?t work|does ?n'?t work|not solved|no it|nope|not working still|same problem)/.test(t);
+  const billingDispute=["refund","charged","double charge","overcharge","charged twice","billed twice","money back","dispute"].some(k=>t.includes(k));
+  const designQ=/(css|colour|color|style|design|font|layout|look|translate|language|customi[sz]e)/.test(t);
 
-  // 1) explicit human request
-  if(humanRequest)
-    return human("General support","Customer explicitly asked to speak with a person.",app,kb,a,
-      "Of course — I’ll connect you with a support engineer right away. So they can help as fast as possible, could you share your store URL and a short description of what’s happening?");
+  const kb=matchKB(t,app);
+  let dec;
 
-  // 2) meta: are you human or AI  (auto, honest)
-  if(metaAI)
-    return auto(app,null,0,
-      "Great question! You’re chatting with Efoli Support. We use AI tools to respond faster and pull up the right help articles, but a real support engineer reviews every conversation and handles anything that needs a human touch. How can I help you today?",
-      "Meta question — answered honestly, no ticket needed.");
-
-  // 3) greeting only
-  if(greetingOnly)
-    return auto(app,null,0,
-      "Hi there, and thanks for reaching out to Efoli Support! How can I help today? If you let me know which app you’re using (PushBundle, MultiVariants, DiscountRay, OrderRules, or Embed App) and what’s happening, I’ll get you sorted quickly.",
-      "Greeting — friendly opener, waiting for details.");
-
-  // 4) thanks only
-  if(thanksOnly)
-    return auto(app,null,0,
-      "You’re very welcome! I’m glad I could help. If anything else comes up with your Efoli apps, just reach out anytime.",
-      "Positive/closing message — no action needed.");
-
-  // 5) frustrated → human (personal response)
-  if(a.sentiment==="Frustrated")
-    return human("Senior support","Customer sounds upset — a support engineer should respond personally.",app,kb,a,
-      "I’m really sorry for the trouble, and I completely understand the frustration. I’m making sure a support engineer looks at this personally and gets back to you quickly. Could you share your store URL so we can jump straight in?");
-
-  // 6) bug / technical → engineering
-  if(a.category==="Bug / Technical" && kb.score<2)
-    return human("Engineering / Tier-2","Looks like a technical issue that needs investigation.",app,kb,a,
-      "Thanks for flagging this. It looks like something our technical team should check, so I’m escalating it now. Could you share your store URL, the app name, and a screenshot or short screen recording if possible? I’ll keep you updated.");
-
-  // 7) billing dispute / refund → billing
-  if(a.category==="Billing & Payments" && billingDispute)
-    return human("Billing team","Billing/refund matter — needs a human to review the account.",app,kb,a,
-      "Thanks for reaching out, and sorry for the trouble. I’ve passed this to our billing team and they’ll follow up shortly. To help them find your account fast, could you confirm your store URL and the email on your Shopify account?");
-
-  // 8) confident doc match → auto answer
-  if(kb.score>=2 || (kb.score>=1 && app)){
-    const art=kb.article;
-    const reply = "Thanks for reaching out, happy to help!\n\n"+art.answer+"\n\nYou can find the full steps in our help center ("+art.src+"). If anything is still unclear, just let me know and I’ll walk you through it.";
-    return auto(app||art.app, art, kb.score, reply, "Confident match in the help center — safe to auto-suggest.");
+  // follow-up handling after an answer
+  if(stage==="answered" && positive && !negative){
+    stage="idle";
+    dec=say("Glad that helped! 🙂 If anything else comes up with your eFoli apps, just ask. Have a great day!","auto","Customer confirmed it's resolved.",app,null,c);
+  }
+  else if(stage==="answered" && (negative||humanReq)){
+    dec=handoff("General support","Docs answer didn't resolve it — escalating to a support engineer.",app,kb,c,
+      "Sorry that didn't fix it. I'm connecting you with a support engineer who can dig in properly. Could you share your store URL and a screenshot of what you're seeing?");
+  }
+  else if(humanReq){
+    dec=handoff("General support","Customer asked to speak with a person.",app,kb,c,
+      "Of course — I'll connect you with a support engineer right away. To help them jump in fast, could you share your store URL and a quick note on what's happening?");
+  }
+  else if(metaAI){
+    dec=say("Great question! You're chatting with eFoli Support. I'm an AI assistant that answers from our help docs and pulls up the right guides, but a real support engineer reviews things and takes over anything that needs a human. How can I help today?","auto","Meta question — answered honestly.",app,null,c);
+  }
+  else if(greeting){
+    dec=say("Hi there, and thanks for reaching out to eFoli Support! Which app are you using — PushBundle, MultiVariants, DiscountRay, QuotWay, or OrderRules — and what's happening? I'll get you sorted.","ask","Greeting — asking for app + issue.",app,null,c);
+  }
+  else if(c.sentiment==="Frustrated"){
+    dec=handoff("Senior support","Customer sounds upset — a support engineer should respond personally.",app,kb,c,
+      "I'm really sorry for the trouble, and I understand the frustration. I'm making sure a support engineer looks at this personally and gets back to you quickly. Could you share your store URL so we can jump straight in?");
+  }
+  else if(billingDispute){
+    dec=handoff("Billing team","Billing/refund matter — needs a human to check the account.",app,kb,c,
+      "Thanks for reaching out, and sorry for the trouble. I've passed this to our billing team and they'll follow up shortly. Could you confirm your store URL and the email on your Shopify account so they can find it fast?");
+  }
+  else if(c.category==="Bug / Technical" && kb.score<2){
+    dec=handoff("Engineering / Tier-2","Looks like a technical issue that needs investigation.",app,kb,c,
+      "Thanks for flagging this. It looks like something our technical team should check. Could you share your store URL, the app name, and a screenshot or short recording? I'll escalate it and keep you posted.");
+  }
+  else if(designQ && kb.score<2){
+    // design/customization guidance
+    const dtext = app==="DiscountRay"
+      ? "For DiscountRay you can style the widget with Custom CSS (App Settings → How to Apply Custom CSS) and pick a Display Style. To match your theme's price styling, right-click the price → Inspect, copy its class, and paste it into settings. For heavier custom design, I can bring in a support engineer."
+      : app==="MultiVariants"
+      ? "For MultiVariants you can change the look from the ruleset's Display Style (List, Select, Swatch, or Matrix/Grid) and edit the button/label text under Translation. For deeper CSS changes, I can connect you with a support engineer."
+      : "Most eFoli apps let you adjust the look in the app's settings — display styles, labels, and translations — and DiscountRay also supports Custom CSS. Tell me which app and what you'd like to change, and I'll point you to the exact setting (or connect you with a support engineer for custom CSS).";
+    dec=say(dtext,"auto","Design/customization question — guided from docs, human offered for custom CSS.",app,null,{...c,category:"Design / Customization"});
+  }
+  else if(kb.score>=2 || (kb.score>=1 && app)){
+    lastArticle=kb.a; stage="answered";
+    dec=say(kb.a.a+"\n\nDid that solve it? If not, I can connect you with a support engineer.","auto","Confident match in the help center.",app||kb.a.app,kb.a,c);
+  }
+  else {
+    dec=handoff("General support","Not enough of a match in our docs — a support engineer should take a closer look.",app,kb,c,
+      "Thanks for reaching out! I want to get this to the right place. Could you tell me which app you're using (PushBundle, MultiVariants, DiscountRay, QuotWay, or OrderRules), your store URL, and a bit more detail about what's happening?");
+    if(!app) dec.mode="ask";
   }
 
-  // 9) fallback → human (general)
-  return human("General support","Not enough of a match in our docs — a support engineer should take a closer look.",app,kb,a,
-    "Thanks for reaching out! I want to make sure this gets the right help, so I’m connecting you with a support engineer. Could you tell me which app you’re using, share your store URL, and add a bit more detail about what you’re seeing?");
+  pushMsg("bot",dec.text);
+  return dec;
 }
 
-function auto(app, article, score, reply, reason){
-  return { mode:"auto", app, article, confidence: score>=2?"High":score===1?"Medium":"—",
-           reason, reply: reply+CLOSE };
+function say(text,mode,reason,app,article,c){
+  return {mode, text, reason, app, article, category:c.category, priority:c.priority, why:c.why, sentiment:c.sentiment, team:null, confidence:article?"High":"—"};
 }
-function human(team, reason, app, kb, a, holding){
-  const conf = kb.score>=2?"High":kb.score===1?"Medium":"Low";
-  const note = "Route to: "+team+"\nApp: "+(app||"—")+" · Category: "+a.category+" · Priority: "+a.priority+" · Sentiment: "+a.sentiment
-             + (kb.article? "\nClosest article: "+kb.article.title+" ("+conf+" confidence)":"")
-             + "\nReason: "+reason;
-  return { mode:"human", team, app, article:kb.article, confidence:conf, reason, note, reply: holding+CLOSE };
+function handoff(team,reason,app,kb,c,text){
+  stage="human";
+  const conf=kb.score>=2?"High":kb.score===1?"Medium":"Low";
+  return {mode:"human", text, reason, team, app, article:kb.a, category:c.category, priority:c.priority, why:c.why, sentiment:c.sentiment, confidence:conf};
 }
 
-// ---------- Render ----------
-function render(text){
-  const a=analyze(text);
-  const r=route(text,a);
-
-  const json={ app:r.app||null, category:a.category, priority:a.priority, sentiment:a.sentiment,
-    routing:r.mode==="auto"?"auto_answer":"human_handoff",
-    team:r.mode==="human"?r.team:null,
-    matchedArticle:r.article?r.article.title:null,
-    confidence:r.confidence, customerEmail:a.customerEmail, wordCount:a.wordCount };
-
-  const pills =
-    (r.app?`<span class="pill app">${r.app}</span>`:"") +
-    `<span class="pill cat">${a.category}</span>`+
-    `<span class="pill badge-${a.priority}">${a.priority} priority</span>`+
-    `<span class="pill">${a.sentiment}</span>`;
-
-  const routeBanner = r.mode==="auto"
-    ? `<div class="route route-auto">✓ Auto-answer from docs<small>${r.reason}</small></div>`
-    : `<div class="route route-human">→ Escalate to human · ${r.team}<small>${r.reason}</small></div>`;
-
-  const replyLabel = r.mode==="auto"
-    ? `Suggested answer (from Help Center)`
-    : `Holding reply to customer`;
-
-  const sourceLine = (r.mode==="auto" && r.article)
-    ? `<div class="src">Source: ${r.article.src} · Confidence: ${r.confidence}</div>` : "";
-
-  const handoff = r.mode==="human"
-    ? `<div class="block"><div class="label">Handoff note (internal)</div><div class="note">${r.note.replace(/</g,"&lt;")}</div></div>` : "";
-
-  document.getElementById("result").innerHTML = `
-    <div class="meta">${pills}</div>
-    ${routeBanner}
-    <div class="block">
-      <div class="label">Why this priority</div>
-      <div style="font-size:13px;color:var(--muted)">${a.priorityReason}</div>
+// ================= Render =================
+function renderChat(){
+  const el=document.getElementById("chat"); el.innerHTML="";
+  convo.forEach(m=>{
+    const w=document.createElement("div"); w.className="who"+(m.who==="cust"?" r":"");
+    w.textContent=m.who==="cust"?"Customer":"Assistant";
+    const b=document.createElement("div"); b.className="msg "+(m.who==="cust"?"cust":"bot");
+    b.textContent=m.text;
+    el.appendChild(w); el.appendChild(b);
+  });
+  el.scrollTop=el.scrollHeight;
+}
+function renderReason(d){
+  const routeClass=d.mode==="human"?"route-human":d.mode==="ask"?"route-ask":"route-auto";
+  const routeText=d.mode==="human"?("→ Escalate to human · "+d.team):d.mode==="ask"?"↺ Asking a clarifying question":"✓ Auto-answer from docs";
+  const json={ app:d.app||null, category:d.category, priority:d.priority, sentiment:d.sentiment,
+    routing:d.mode==="human"?"human_handoff":d.mode==="ask"?"clarify":"auto_answer",
+    team:d.team||null, matchedArticle:d.article?d.article.title:null, confidence:d.confidence };
+  const src=(d.mode==="auto"&&d.article)?`<div class="src">Source: ${d.article.src} · Confidence: ${d.confidence}</div>`:"";
+  document.getElementById("reason").innerHTML=`
+    <div class="meta">
+      ${d.app?`<span class="pill app">${d.app}</span>`:""}
+      <span class="pill cat">${d.category}</span>
+      <span class="pill badge-${d.priority}">${d.priority}</span>
+      <span class="pill">${d.sentiment}</span>
     </div>
-    ${handoff}
-    <div class="block">
-      <div class="label">${replyLabel} <span style="text-transform:none">(edit before sending)</span>
-        <button class="ghost" id="copyBtn" style="padding:4px 10px;font-size:12px;margin-left:6px">Copy</button>
-        <span class="copied" id="copied">Copied</span>
-      </div>
-      <div class="reply" id="replyBox" contenteditable="true">${r.reply.replace(/</g,"&lt;")}</div>
-      ${sourceLine}
-    </div>
-    <div class="block">
-      <div class="label">Structured output (JSON)</div>
-      <pre>${JSON.stringify(json,null,2)}</pre>
-    </div>
-  `;
-  document.getElementById("copyBtn").onclick=()=>{
-    navigator.clipboard.writeText(document.getElementById("replyBox").innerText);
-    const c=document.getElementById("copied"); c.classList.add("show"); setTimeout(()=>c.classList.remove("show"),1200);
-  };
+    <div class="route ${routeClass}">${routeText}<small>${d.reason}</small></div>
+    <div class="block"><div class="label">Priority reason</div><div style="font-size:12.5px;color:var(--muted)">${d.why}</div></div>
+    ${src}
+    <div class="block"><div class="label">Structured output (JSON)</div><pre>${JSON.stringify(json,null,2)}</pre></div>`;
 }
 
-// ---------- Wire up ----------
-document.getElementById("analyze").onclick=()=>{
-  const v=document.getElementById("input").value.trim();
-  if(!v){ document.getElementById("result").innerHTML='<div class="empty">Please paste a customer message first.</div>'; return; }
-  render(v);
-};
-document.getElementById("clear").onclick=()=>{
-  document.getElementById("input").value="";
-  document.getElementById("result").innerHTML='<div class="empty">Results will appear here after you analyze a ticket.</div>';
-};
-document.querySelectorAll("#samples span").forEach(s=>{
-  s.onclick=()=>{ document.getElementById("input").value=SAMPLES[s.dataset.k]; render(SAMPLES[s.dataset.k]); };
-});
+function handle(text){
+  if(!text.trim()) return;
+  pushMsg("cust",text); renderChat();
+  const d=respond(text); renderChat(); renderReason(d);
+}
+
+// greet on load
+function boot(){
+  convo=[]; lastApp=null; stage="idle"; lastArticle=null;
+  pushMsg("bot","Hi! I'm the eFoli Support Assistant. Ask me about PushBundle, MultiVariants, DiscountRay, QuotWay, or OrderRules — I'll answer from our docs or connect you with a support engineer.");
+  renderChat();
+  document.getElementById("reason").innerHTML='<div class="empty">The assistant\'s decision for each message will show here.</div>';
+}
+
+document.getElementById("send").onclick=()=>{ const i=document.getElementById("input"); handle(i.value); i.value=""; };
+document.getElementById("input").addEventListener("keydown",e=>{ if(e.key==="Enter"){ const i=e.target; handle(i.value); i.value=""; } });
+document.querySelectorAll("#quick span").forEach(s=>{ s.onclick=()=>handle(s.textContent); });
+document.getElementById("reset").onclick=boot;
+boot();
 </script>
 </body>
 </html>
