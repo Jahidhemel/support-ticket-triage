@@ -199,7 +199,7 @@ function classify(t){
 }
 
 // ================= Conversation state =================
-let convo=[]; let lastApp=null; let stage="idle"; let lastArticle=null;
+let convo=[]; let lastApp=null; let stage="idle"; let lastArticle=null; let offerTeam="General support";
 const CLOSE="";
 
 function pushMsg(who,text){ convo.push({who,text}); }
@@ -210,7 +210,9 @@ function respond(text){
   const app=detectApp(t)||lastApp;
   if(detectApp(t)) lastApp=detectApp(t);
 
-  const humanReq=["talk to a human","real person","speak to someone","speak to a person","talk to someone","human agent","representative","talk to a agent","talk to an agent"].some(k=>t.includes(k));
+  const humanReq=["talk to a human","real person","speak to someone","speak to a person","talk to someone","human agent","representative","talk to a agent","talk to an agent","connect me","put me through","get me a human","need a human"].some(k=>t.includes(k));
+  const affirmative=/\b(yes|yeah|yep|yup|sure|ok|okay|please|connect|do it|go ahead|sounds good)\b/.test(t)||t.includes("connect me");
+  const decline=/(no thanks|no,? thank|it'?s fine|i'?m good|im good|never ?mind|not now)/.test(t);
   const metaAI=["human or ai","are you a bot","are you ai","is this a bot","talking to a robot","are you real","bot or human","are you human"].some(k=>t.includes(k));
   const greeting=/^(hi|hello|hey|good morning|good afternoon|good evening|assalam|salam)\b/.test(t)&&text.trim().split(/\s+/).length<=4&&!t.includes("?");
   const positive=/(thanks|thank you|thankyou|thx|solved|it works|working now|got it|perfect|great, that)/.test(t);
@@ -220,6 +222,21 @@ function respond(text){
 
   const kb=matchKB(t,app);
   let dec;
+
+  // customer responding to an offer to connect them to a human
+  if(stage==="offered_human"){
+    if(decline && !affirmative && !humanReq){
+      stage="idle";
+      dec=say("No problem at all. If you change your mind or anything else comes up, just let me know — I'm here to help.","auto","Customer declined the human offer.",app,null,c);
+      pushMsg("bot",dec.text); return dec;
+    }
+    if(affirmative || humanReq || negative){
+      dec=handoff(offerTeam,"Customer accepted the offer to talk to a support engineer.",app,kb,c,
+        "Great — I'm connecting you with a support engineer now. Could you share your store URL (and a screenshot if handy) so they can pick it up quickly? Someone will follow up shortly.");
+      pushMsg("bot",dec.text); return dec;
+    }
+    stage="idle"; // otherwise treat as a fresh question
+  }
 
   // follow-up handling after an answer
   if(stage==="answered" && positive && !negative){
@@ -260,6 +277,7 @@ function respond(text){
       ? "For MultiVariants you can change the look from the ruleset's Display Style (List, Select, Swatch, or Matrix/Grid) and edit the button/label text under Translation. For deeper CSS changes, I can connect you with a support engineer."
       : "Most eFoli apps let you adjust the look in the app's settings — display styles, labels, and translations — and DiscountRay also supports Custom CSS. Tell me which app and what you'd like to change, and I'll point you to the exact setting (or connect you with a support engineer for custom CSS).";
     dec=say(dtext,"auto","Design/customization question — guided from docs, human offered for custom CSS.",app,null,{...c,category:"Design / Customization"});
+    stage="offered_human"; offerTeam="Support engineer (custom design)";
   }
   else if(kb.score>=2 || (kb.score>=1 && app)){
     lastArticle=kb.a; stage="answered";
