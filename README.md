@@ -1,12 +1,13 @@
-# Support Ticket Triage & Reply Assistant
+# Efoli Support Assistant — Triage, Docs & Human Handoff
 
-A small, single-page web tool that takes a raw customer support message and instantly:
+A small, single-page web tool that reads a customer support message and decides the right next step:
 
-- **Categorizes** it (Billing, Integration/SSO, Bug, How-to, Account/Access)
-- **Assigns a priority** (P1 / P2 / P3) with a short reason
+- **Detects the app** the customer is asking about (PushBundle, MultiVariants, DiscountRay, OrderRules, Embed App)
+- **Categorizes** the message and assigns a **priority** (P1 / P2 / P3) with a reason
 - **Reads the tone** (Neutral / Frustrated)
-- **Drafts a suggested reply** that a support engineer reviews and edits before sending
-- **Outputs the parsed ticket as structured JSON**
+- **Answers from the knowledge base** when it finds a confident match — with a source and confidence level
+- **Routes to the right human** when it shouldn't auto-answer — billing to the Billing team, bugs to Engineering, upset customers to Senior support, and anything unclear to General support — with an internal handoff note and a holding reply for the customer
+- **Outputs the whole decision as JSON**
 
 It runs fully in the browser — no backend, no login, no data leaves the page.
 
@@ -16,23 +17,30 @@ It runs fully in the browser — no backend, no login, no data leaves the page.
 
 ## Why I built this
 
-I work in SaaS customer support, so I built the kind of tool I would actually want on my own desk. When many tickets come in at once, the slow part is often the first 30 seconds: *what is this about, how urgent is it, and where do I start the reply?* This tool does that first pass automatically, so the human can spend their time solving the problem instead of sorting it.
+I work in SaaS customer support, so I built the kind of tool I'd actually want on my desk. Good support isn't just fast replies — it's getting each message to the *right* place: deflect the common questions with clear documentation, and make sure the sensitive or technical ones reach a human quickly. This tool does exactly that first pass.
 
-I designed it as a **human-in-the-loop** assistant on purpose: the tool suggests, the person decides. Every draft reply is editable, and nothing is ever sent automatically. That mirrors how AI should work in support — accelerating the human, not replacing them.
+It's **human-in-the-loop by design**: the assistant only *suggests*. A support engineer reviews every reply, and anything sensitive, technical, or unclear is routed to a person instead of auto-answered.
 
-## How it works
+## How the routing works
 
-The logic is intentionally simple and readable:
+For each message the tool runs a simple decision flow:
 
-1. The message text is lower-cased and scanned against keyword rule-sets for each category; the best-matching category wins.
-2. Priority is decided by urgency signals (e.g. "urgent", "whole team", "payroll", "down") for P1, and technical/billing-impact words for P2, otherwise P3.
-3. A light sentiment check flags frustrated customers so the reply opens with more empathy.
-4. A reply is drafted from a template chosen by category, then combined with the tone-aware opening.
-5. The parsed result is shown as JSON, the same shape a real integration would pass to another system.
+1. If the customer asks for a person → **human handoff** (General support).
+2. If they ask "are you human or AI?" → an **honest auto-answer** (no ticket needed).
+3. Greetings / thank-yous → a friendly **auto-reply**.
+4. If the customer sounds frustrated → **Senior support** (people, not bots, for upset customers).
+5. If it's a bug / technical issue → **Engineering / Tier-2**, with a request for repro steps.
+6. If it's a billing dispute or refund → **Billing team**.
+7. If there's a confident match in the knowledge base → **auto-answer from docs**, with the source.
+8. Otherwise → **General support**, asking for a bit more detail.
 
 ## How I "vibe-coded" it
 
-I built this with AI assistance (my normal workflow): I described the problem and the behavior I wanted in plain English, iterated on the design and the rules with the AI, then read through, tested, and adjusted the code myself until it did exactly what I intended. I understand every part of it and can extend it.
+I built this with AI assistance (my normal workflow): I described the behavior I wanted in plain English, iterated on the knowledge base and the routing rules with the AI, then read through, tested with real-style messages, and fixed the logic myself. For example, an early version drafted a "duplicate charge" reply for a cancellation refund — I caught it during testing and rewrote the logic so it doesn't assume. That review step is the whole point.
+
+## A note on the knowledge base
+
+The knowledge-base entries are **representative sample content** for Efoli's Shopify apps — enough to demonstrate the doc-deflection flow. In a real deployment these would be replaced with the actual help-center articles (or fetched from the help center via API).
 
 ## Tech
 
@@ -40,9 +48,9 @@ Plain **HTML, CSS, and JavaScript** — no frameworks, no dependencies. One file
 
 ## How I'd extend it
 
-- Swap the keyword classifier for a real **AI model / MCP tool** call, keeping the human-in-the-loop review step.
-- Pull tickets in from a helpdesk (Zendesk / Intercom) via **API** instead of paste.
-- Learn from the edits agents make to the drafts, so suggestions improve over time.
+- Swap the keyword classifier and KB match for a real **AI model / MCP tool**, keeping the human review step.
+- Pull articles live from the **help center** and tickets from the helpdesk (Zendesk / Intercom) via **API**.
+- Learn from the edits agents make to drafts, so both the answers and the routing improve over time.
 
 ---
 
