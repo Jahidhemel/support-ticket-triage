@@ -158,14 +158,22 @@ function analyze(text){
 }
 
 // ---- Draft reply templates by category ----
-function draftReply(a){
+function draftReply(a, rawText){
+  const t = (rawText||"").toLowerCase();
+  const isCancel = ["cancel","not going to use","not gonna use","anymore","stop using","no longer","don't want","do not want","won't use","wont use","leave the app","leaving"].some(k=>t.includes(k));
+  const isRefund = t.includes("refund") || t.includes("money back");
+
   const openUpset = a.sentiment==="Frustrated"
     ? "Thank you for reaching out, and I'm really sorry for the trouble this has caused — I understand how urgent this is, and I'll help you right away.\n\n"
     : "Thanks for reaching out, and happy to help with this.\n\n";
 
   const byCat = {
     "Billing & Payments":
-      "I've pulled up your account and I'm reviewing the charge you mentioned. If it turns out to be a duplicate, I'll get the extra amount refunded and confirm the timeline with you. Could you confirm the date of the charge so I can match it exactly?",
+      (isRefund && isCancel)
+        ? "I'm sorry to hear you're thinking of leaving, and I'll help you with the refund. Let me review your account and check which refund options apply to your plan. Could you confirm the email on your account so I can look into it? And if something about the app made you want to stop using it, I'd genuinely like to hear it — sometimes it's something I can help fix."
+      : isRefund
+        ? "I'm sorry for the trouble with this. I'll look into your account and the charge in question right away and check the refund options available to you. To help me sort it out quickly, could you confirm the email on your account and the approximate date of the charge?"
+        : "I'll pull up your account and review the charge you mentioned. Could you confirm the email on your account and the date of the charge so I can match it exactly and check what's happening?",
     "Integration & SSO":
       "For the SSO/SCIM setup, let's check a few things: (1) that the correct metadata/URLs are configured on both sides, (2) that the user is assigned to the app in your identity provider, and (3) the exact error text you see. If you can share a screenshot of the error, I'll pinpoint where the connection is breaking.",
     "Bug / Technical":
@@ -185,7 +193,7 @@ function draftReply(a){
 // ---- Render ----
 function render(text){
   const a = analyze(text);
-  const reply = draftReply(a);
+  const reply = draftReply(a, text);
   const json = { category:a.category, priority:a.priority, sentiment:a.sentiment,
                  customerEmail:a.customerEmail, wordCount:a.wordCount, suggestedReply:"(drafted)" };
 
