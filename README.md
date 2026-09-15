@@ -1,57 +1,51 @@
-# Efoli Support Assistant — Triage, Docs & Human Handoff
+# eFoli Support Assistant — AI chat with human handoff
 
-A small, single-page web tool that reads a customer support message and decides the right next step:
-
-- **Detects the app** the customer is asking about (PushBundle, MultiVariants, DiscountRay, OrderRules, Embed App)
-- **Categorizes** the message and assigns a **priority** (P1 / P2 / P3) with a reason
-- **Reads the tone** (Neutral / Frustrated)
-- **Answers from the knowledge base** when it finds a confident match — with a source and confidence level
-- **Routes to the right human** when it shouldn't auto-answer — billing to the Billing team, bugs to Engineering, upset customers to Senior support, and anything unclear to General support — with an internal handoff note and a holding reply for the customer
-- **Outputs the whole decision as JSON**
-
-It runs fully in the browser — no backend, no login, no data leaves the page.
+An interactive support chat (single web page) that answers customer questions from **eFoli's real help docs**, asks follow-up questions, and hands off to a human when it should. Built around eFoli's Shopify apps: **PushBundle, MultiVariants, DiscountRay, QuotWay, OrderRules**.
 
 **Live demo:** https://jahidhemel.github.io/support-ticket-triage/
 
+It runs fully in the browser — no backend, no login, no data leaves the page.
+
 ---
 
-## Why I built this
+## What it does
 
-I work in SaaS customer support, so I built the kind of tool I'd actually want on my desk. Good support isn't just fast replies — it's getting each message to the *right* place: deflect the common questions with clear documentation, and make sure the sensitive or technical ones reach a human quickly. This tool does exactly that first pass.
+The customer chats; the assistant responds turn by turn. For every message it:
 
-It's **human-in-the-loop by design**: the assistant only *suggests*. A support engineer reviews every reply, and anything sensitive, technical, or unclear is routed to a person instead of auto-answered.
+- **Detects the app** the customer is asking about (and remembers it across the conversation).
+- **Classifies** the message (category, priority, tone).
+- **Answers from the knowledge base** when it finds a confident match — the KB content is taken from eFoli's public docs and FAQs (e.g. *"a customer-specific DiscountRay discount needs the shopper to be signed in — it won't resolve at guest checkout"*), and it shows the **source doc** and **confidence**.
+- **Asks a follow-up** ("Did that solve it?"). If the customer says it didn't, it **escalates to a human**.
+- **Routes to the right team** when it shouldn't auto-answer: **Billing** for refunds, **Engineering** for bugs, **Senior support** for upset customers, **General support** when someone asks for a person or it's unclear.
+- Shows all of this in a **"behind the scenes" reasoning panel** (detected app, routing decision, matched article, confidence, and the full JSON).
 
-## How the routing works
+## Why I built it
 
-For each message the tool runs a simple decision flow:
+I work in eFoli support, so I built the kind of assistant I'd actually want on the front line: deflect the common, well-documented questions instantly, and get everything sensitive or unclear to the right human fast — without ever guessing.
 
-1. If the customer asks for a person → **human handoff** (General support).
-2. If they ask "are you human or AI?" → an **honest auto-answer** (no ticket needed).
-3. Greetings / thank-yous → a friendly **auto-reply**.
-4. If the customer sounds frustrated → **Senior support** (people, not bots, for upset customers).
-5. If it's a bug / technical issue → **Engineering / Tier-2**, with a request for repro steps.
-6. If it's a billing dispute or refund → **Billing team**.
-7. If there's a confident match in the knowledge base → **auto-answer from docs**, with the source.
-8. Otherwise → **General support**, asking for a bit more detail.
+It's **human-in-the-loop by design**: the assistant only *suggests*. A support engineer reviews replies, and it never auto-answers billing, bugs, upset customers, or anything it isn't confident about.
+
+## Example flows to try
+
+- *"How do I install DiscountRay?"* → answers from docs, detects DiscountRay.
+- *"My discount is not applying at checkout"* → gives the real guest-checkout / sign-in answer, then asks if it's solved.
+- Reply *"still not working"* → escalates to a support engineer.
+- *"How do I change the widget colour?"* → design guidance (Custom CSS / Display Style), offers a human for custom work.
+- *"I want a refund, charged twice"* → routes to the Billing team.
+- *"Can I talk to a human?"* → routes to a support engineer.
 
 ## How I "vibe-coded" it
 
-I built this with AI assistance (my normal workflow): I described the behavior I wanted in plain English, iterated on the knowledge base and the routing rules with the AI, then read through, tested with real-style messages, and fixed the logic myself. For example, an early version drafted a "duplicate charge" reply for a cancellation refund — I caught it during testing and rewrote the logic so it doesn't assume. That review step is the whole point.
+I researched eFoli's real product docs and FAQs, described the conversation and routing behaviour I wanted in plain English, built the knowledge base and rules with AI, then tested it turn by turn and fixed the logic myself. For example, an early version assumed a "duplicate charge" for a *cancellation* refund — I caught it in testing and rewrote the logic so it doesn't assume. That review step is the whole point.
 
 ## A note on the knowledge base
 
-The knowledge-base entries are **representative sample content** for Efoli's Shopify apps — enough to demonstrate the doc-deflection flow. In a real deployment these would be replaced with the actual help-center articles (or fetched from the help center via API).
+The KB is built from eFoli's **public** docs and FAQs — enough to demonstrate accurate, doc-grounded answers. In a real deployment it would read the live help center (or an internal doc store) via API, and the keyword matching would be replaced with a real AI model / MCP tool, keeping the human review step.
 
 ## Tech
 
 Plain **HTML, CSS, and JavaScript** — no frameworks, no dependencies. One file, loads instantly, works offline.
 
-## How I'd extend it
-
-- Swap the keyword classifier and KB match for a real **AI model / MCP tool**, keeping the human review step.
-- Pull articles live from the **help center** and tickets from the helpdesk (Zendesk / Intercom) via **API**.
-- Learn from the edits agents make to drafts, so both the answers and the routing improve over time.
-
 ---
 
-_Built by Md. Jahidul Islam Hemel — Technical Support Engineer (SaaS & Shopify)._
+_Built by Md. Jahidul Islam Hemel — Technical Support Engineer, eFoli (SaaS & Shopify)._
