@@ -10,7 +10,7 @@ A small, single-page web tool that takes a raw customer support message and inst
 
 It runs fully in the browser — no backend, no login, no data leaves the page.
 
-**Live demo:** _(add your GitHub Pages link here after publishing)_
+**Live demo:** https://jahidhemel.github.io/support-ticket-triage/
 
 ---
 
